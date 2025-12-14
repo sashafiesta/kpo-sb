@@ -13,7 +13,8 @@
 Единая точка входа, перекидывающая запросы к другим сервисам.
 2. File Service (`localhost:8081`):
 Принимает запросы от пользователей, вычисляет хеши, сохраняет метаданные, начинает проверку в `Analysis Service`.
-3. Analysis Service (`localhost:8081`):
+3. Analysis Service (`localhost:8082`):
+Получает запросы, спрашивает у бд и делает репорты. Также сохраняет текущий Fingerprint в бд.
 4. PostgreSQL бд:
 бд для File Serivce `file_db`
 бд для Analysis Service `analysis_db`
