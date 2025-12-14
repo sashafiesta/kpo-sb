@@ -23,6 +23,36 @@
 Ищем совпадения по `task_id` и `file_hash`, если имя студента совпадает.
 Нашли - бан.
 
+# API Референс
+## Публичный
+Отправить файл:
+`POST http://localhost:8080/api/v1/files/upload`
+Body: `file` бинарник, `student_name` имя студента в строке, `task_id` id в строке
+Возвращает: 200 OK и строку с id
+Получить отчет:
+`GET http://localhost:8080/api/v1/reports/{id}`
+Возвращает: 200 OK и json
+```
+{
+	"submissionId": "{id}",
+	"isPlagiarized": {true/false},
+	"verdictMessage": "{message}",
+	"createdAt": "{timestamp}"
+}
+```
+
+## Внутренний
+AnalysisService ждет от File Service запросы вида:
+```
+{
+  "submissionId": "{id}",
+  "studentName": "{name}",
+  "taskId": "{taskid}",
+  "fileHash": "{hash}"
+}
+```
+и не возвращает ничего полезного, просто регистрирует
+
 # Сборка и запуск:
 ## Сборка
 ```
