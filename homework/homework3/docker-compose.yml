@@ -1,0 +1,87 @@
+services:
+  file-db:
+    image: postgres:15-alpine
+    container_name: file_db
+    environment:
+      POSTGRES_DB: file_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - file_db_data:/var/lib/postgresql/data
+    networks:
+      - antiplagiarism-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  analysis-db:
+    image: postgres:15-alpine
+    container_name: analysis_db
+    environment:
+      POSTGRES_DB: analysis_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - analysis_db_data:/var/lib/postgresql/data
+    networks:
+      - antiplagiarism-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  file-service:
+    build: ./file-service
+    container_name: file_service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://file-db:5432/file_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      FILE_ANALYSIS_SERVICE_URL: http://analysis-service:8082/api/internal/analysis
+    depends_on:
+      file-db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/uploads
+    networks:
+      - antiplagiarism-net
+
+  analysis-service:
+    build: ./analysis-service
+    container_name: analysis_service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://analysis-db:5432/analysis_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    depends_on:
+      analysis-db:
+        condition: service_healthy
+    networks:
+      - antiplagiarism-net
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - file-service
+      - analysis-service
+    networks:
+      - antiplagiarism-net
+
+volumes:
+  file_db_data:
+  analysis_db_data:
+  uploads_data:
+
+networks:
+  antiplagiarism-net:
+    driver: bridge
